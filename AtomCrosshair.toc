@@ -1,0 +1,8 @@
+## Interface: 120000
+## Title: AtomCrosshair
+## Notes: Shows a crosshair in the center of the screen during combat.
+## Author: T
+## Version: 1.0
+## SavedVariables: AtomCrosshairDB
+
+AtomCrosshair.lua
