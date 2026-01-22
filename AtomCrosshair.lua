@@ -181,10 +181,10 @@ function frame:CreateOptionsPanel()
                 UpdateVisuals()
             end
 
-            local function OnCancel(previousValues)
-                local prevR, prevG, prevB, prevA = unpack(previousValues)
-                setVal({prevR, prevG, prevB, prevA})
-                swatchBg:SetColorTexture(prevR, prevG, prevB, prevA)
+            -- FIX: Use captured variables (r, g, b, a) instead of relying on arguments
+            local function OnCancel()
+                setVal({r, g, b, a})
+                swatchBg:SetColorTexture(r, g, b, a)
                 UpdateVisuals()
             end
 
