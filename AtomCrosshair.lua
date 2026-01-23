@@ -10,66 +10,63 @@ local vLine = frame:CreateTexture(nil, "ARTWORK")
 
 -- Default Settings
 local defaults = {
-    Color = {0, 1, 0, 1}, -- Green
+    Color = {0, 1, 0, 1},
     Size = 50,
     Thickness = 3,
-    AlwaysOn = false, -- false = Combat Only, true = Always Visible
+    AlwaysOn = false, 
     OffsetX = 0,
     OffsetY = 0,
     BorderThickness = 1,
-    BorderColor = {0, 0, 0, 1} -- Black
+    BorderColor = {0, 0, 0, 1}
 }
 
 -- 2. CORE FUNCTIONS -------------------------------
-
--- Updates the look (Color/Size/Position/Border) based on current DB settings
 local function UpdateVisuals()
     if not AtomCrosshairDB then return end
     
-    local c = AtomCrosshairDB.Color or defaults.Color
+    local c = AtomCrosshairDB.Color
+    if type(c) ~= "table" or #c < 3 then c = defaults.Color end
+    
+    local bc = AtomCrosshairDB.BorderColor
+    if type(bc) ~= "table" or #bc < 3 then bc = defaults.BorderColor end
+
     local s = AtomCrosshairDB.Size or defaults.Size
     local t = AtomCrosshairDB.Thickness or defaults.Thickness
     local x = AtomCrosshairDB.OffsetX or 0
     local y = AtomCrosshairDB.OffsetY or 0
-    
     local bt = AtomCrosshairDB.BorderThickness or defaults.BorderThickness
-    local bc = AtomCrosshairDB.BorderColor or defaults.BorderColor
 
     frame:SetSize(s, s)
-    
-    -- Clear previous points to prevent stacking anchors when moving
     frame:ClearAllPoints()
     frame:SetPoint("CENTER", UIParent, "CENTER", x, y)
 
     -- Main Lines
-    hLine:SetHeight(t)
-    hLine:SetWidth(s)
-    hLine:SetPoint("CENTER")
-    hLine:SetColorTexture(unpack(c))
+    hLine:SetHeight(t);
+    hLine:SetWidth(s);
+    hLine:SetPoint("CENTER");
+    hLine:SetColorTexture(unpack(c));
 
-    vLine:SetWidth(t)
-    vLine:SetHeight(s)
-    vLine:SetPoint("CENTER")
-    vLine:SetColorTexture(unpack(c))
+    vLine:SetWidth(t);
+    vLine:SetHeight(s);
+    vLine:SetPoint("CENTER");
+    vLine:SetColorTexture(unpack(c));
     
-    -- Borders (Outline)
-    -- If BorderThickness is 0, hide them effectively by setting size to 0 or hiding
+    -- Borders
     if bt > 0 then
-        hBorder:Show()
+        hBorder:Show();
         vBorder:Show()
         
-        -- Border is the size of the line + 2x thickness (for top/bottom and left/right outline)
-        hBorder:SetHeight(t + (bt * 2))
-        hBorder:SetWidth(s + (bt * 2))
+        hBorder:SetHeight(t + (bt * 2));
+        hBorder:SetWidth(s + (bt * 2));
         hBorder:SetPoint("CENTER")
         hBorder:SetColorTexture(unpack(bc))
 
-        vBorder:SetWidth(t + (bt * 2))
-        vBorder:SetHeight(s + (bt * 2))
+        vBorder:SetWidth(t + (bt * 2));
+        vBorder:SetHeight(s + (bt * 2));
         vBorder:SetPoint("CENTER")
         vBorder:SetColorTexture(unpack(bc))
     else
-        hBorder:Hide()
+        hBorder:Hide();
         vBorder:Hide()
     end
 end
@@ -101,15 +98,27 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         if not AtomCrosshairDB then
             AtomCrosshairDB = CopyTable(defaults)
         else
-            -- Fix Saving: Backfill missing keys (e.g., if user has old DB without Border settings)
             for k, v in pairs(defaults) do
                 if AtomCrosshairDB[k] == nil then
-                    AtomCrosshairDB[k] = v
+                    if type(v) == "table" then
+                        AtomCrosshairDB[k] = CopyTable(v)
+                    else
+                        AtomCrosshairDB[k] = v
+                    end
                 end
+            end
+            
+            -- 2. SANITY CHECK: Fix corrupt color tables
+            if type(AtomCrosshairDB.BorderColor) ~= "table" or #AtomCrosshairDB.BorderColor < 3 then
+                 AtomCrosshairDB.BorderColor = CopyTable(defaults.BorderColor)
+            end
+            
+            if type(AtomCrosshairDB.Color) ~= "table" or #AtomCrosshairDB.Color < 3 then
+                 AtomCrosshairDB.Color = CopyTable(defaults.Color)
             end
         end
         
-        -- Initialize Options Panel (Function defined below)
+        -- Initialize Options Panel
         self:CreateOptionsPanel()
         -- Apply initial look
         UpdateVisuals()
@@ -128,11 +137,9 @@ end)
 
 -- 4. OPTIONS PANEL (SETTINGS) ---------------------
 function frame:CreateOptionsPanel()
-    -- Create the panel frame
     local panel = CreateFrame("Frame", "AtomCrosshairOptions", UIParent)
     panel.name = "AtomCrosshair"
     
-    -- Title
     local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 16, -16)
     title:SetText("AtomCrosshair Settings")
@@ -149,22 +156,25 @@ function frame:CreateOptionsPanel()
 
     -- === COLOR PICKER HELPER ===
     local function CreateColorPicker(name, labelText, parent, anchorTo, getVal, setVal)
-        -- Label
         local label = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
         label:SetPoint("TOPLEFT", anchorTo, "BOTTOMLEFT", 0, -20)
         label:SetText(labelText)
 
-        -- Swatch Button
         local colorSwatch = CreateFrame("Button", nil, parent)
         colorSwatch:SetSize(40, 20)
         colorSwatch:SetPoint("LEFT", label, "RIGHT", 10, 0)
         
-        -- Background (shows current color)
         local swatchBg = colorSwatch:CreateTexture(nil, "BACKGROUND")
         swatchBg:SetAllPoints()
-        swatchBg:SetColorTexture(unpack(getVal()))
         
-        -- Border
+        -- SAFETY: Ensure getVal returns a valid table before unpacking
+        local c = getVal()
+        if type(c) == "table" and #c >= 3 then
+            swatchBg:SetColorTexture(unpack(c))
+        else
+            swatchBg:SetColorTexture(1, 1, 1, 1) -- Fallback white
+        end
+        
         local border = colorSwatch:CreateTexture(nil, "BORDER")
         border:SetAllPoints()
         border:SetColorTexture(0.5, 0.5, 0.5, 0.5)
@@ -181,7 +191,6 @@ function frame:CreateOptionsPanel()
                 UpdateVisuals()
             end
 
-            -- FIX: Use captured variables (r, g, b, a) instead of relying on arguments
             local function OnCancel()
                 setVal({r, g, b, a})
                 swatchBg:SetColorTexture(r, g, b, a)
@@ -209,7 +218,7 @@ function frame:CreateOptionsPanel()
             end
         end)
         
-        return label -- Return the label so we can anchor the next element to it
+        return label
     end
 
     -- Main Color Picker
@@ -234,7 +243,6 @@ function frame:CreateOptionsPanel()
         slider:SetValueStep(1)
         slider:SetObeyStepOnDrag(true)
         
-        -- Set Labels
         _G[name .. "Low"]:SetText(minVal)
         _G[name .. "High"]:SetText(maxVal)
         _G[name .. "Text"]:SetText(label .. ": " .. math.floor(getVal()))
@@ -269,7 +277,7 @@ function frame:CreateOptionsPanel()
     )
     thicknessSlider:SetPoint("TOPLEFT", sizeSlider, "BOTTOMLEFT", 0, -40)
 
-    -- Border Thickness Slider (New)
+    -- Border Thickness Slider
     local borderThicknessSlider = CreateSlider("AtomCrosshairBorderThicknessSlider", panel, "Border thickness", 0, 10,
         function() return AtomCrosshairDB.BorderThickness or defaults.BorderThickness end,
         function(val)
