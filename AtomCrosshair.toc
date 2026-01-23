@@ -2,7 +2,7 @@
 ## Title: AtomCrosshair
 ## Notes: Shows a customisable crosshair in the center of the screen.
 ## Author: T
-## Version: 1.0.1
+## Version: 1.0.2
 ## SavedVariables: AtomCrosshairDB
 
 AtomCrosshair.lua
