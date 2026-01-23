@@ -1,4 +1,4 @@
-## Interface: 120000
+## Interface: 120000, 120001
 ## Title: AtomCrosshair
 ## Notes: Shows a customisable crosshair in the center of the screen.
 ## Author: T
