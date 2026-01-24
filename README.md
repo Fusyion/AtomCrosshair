@@ -2,6 +2,8 @@
 
 This addon adds a customisable crosshair to the middle of your UI. It's meant to replace the popular combat WeakAura with the same functionality.
 
+Access the settings through Options -> AddOns -> AtomCursor
+
 ## Features
 Customisable:
 - Always or during combat only
